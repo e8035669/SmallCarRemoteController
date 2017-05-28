@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -45,6 +46,10 @@ public class MainActivity extends AppCompatActivity {
 
     // Note: choose button or sensor
     private boolean isButtonControl = true;
+
+    // Note: 小車命令計算機
+    private WheelCommand wheelCommand = new WheelCommand();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -218,11 +223,35 @@ public class MainActivity extends AppCompatActivity {
         });
         radioGroup.check(R.id.btnControlOpt);
 
-        /*
+
         //Note: 校正桿handler
-        SeekBar seekBar = (SeekBar)findViewById(R.id.seekBar);
-        seekBar.
-        */
+        SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            Toast toast = Toast.makeText(MainActivity.this, "??", Toast.LENGTH_SHORT);
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                wheelCommand.setMaxSpeed(progress - 128);
+                toast.setText(Integer.toString(progress - 128));
+                if (fromUser) {
+                    toast.show();
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        int value = preferences.getInt("seekbar", 128);
+        seekBar.setProgress(value);
     }
 
     @Override
@@ -231,15 +260,27 @@ public class MainActivity extends AppCompatActivity {
             case REQUEST_DEVICE_LIST:
                 if (resultCode == Activity.RESULT_OK) {
                     String address = data.getStringExtra("deviceAddress");
-                    BluetoothDevice bluetoothDevice = bluetoothAdapter.getRemoteDevice(address);
-                    Toast.makeText(this, "Connect to " + address, Toast.LENGTH_LONG).show();
-                    bluetoothConnectThread = new BluetoothConnectThread(bluetoothDevice, bluetoothThreadHandler, 100){
+                    final BluetoothDevice bluetoothDevice = bluetoothAdapter.getRemoteDevice(address);
+                    //Toast.makeText(MainActivity.this, "Connect to " + address, Toast.LENGTH_LONG).show();
+                    final Dialog dialog1 = ProgressDialog.show(MainActivity.this, "請稍後...", "正在連線到" + bluetoothDevice.getName(), true, false);
+                    new Thread() {
                         @Override
-                        public String onRequestSendingData() {
-                            return null;
+                        public void run() {
+                            bluetoothConnectThread = new BluetoothConnectThread(bluetoothDevice, bluetoothThreadHandler, 100) {
+                                @Override
+                                public String onRequestSendingData() {
+                                    if (isButtonControl) {
+                                        return btnSendData;
+                                    } else {
+                                        return sensorSendData;
+                                    }
+                                }
+                            };
+                            bluetoothConnectThread.start();
+                            dialog1.dismiss();
                         }
-                    };
-                    bluetoothConnectThread.start();
+                    }.start();
+
                 } else {
                     Toast.makeText(this, "Connect Cancelled", Toast.LENGTH_SHORT).show();
                 }
@@ -288,49 +329,61 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateSendingData() {
+        double left = 0;
+        double right = 0;
         switch (this.btnStatus) {
             case 0b0000:
             case 0b1100:
             case 0b0011:
             case 0b1111:
-                btnSendData = "W255255";//不動
+                left = 0;//不動
+                right = 0;
                 break;
             case 0b1000:
             case 0b1011:
-                btnSendData = "W510510";
+                left = 1;
+                right = 1;
                 break;
             case 0b0100:
             case 0b0111:
-                btnSendData = "W000000";
+                left = -1;
+                right = -1;
                 break;
             case 0b0010:
             case 0b1110:
-                btnSendData = "W000510";
+                left = -1;
+                right = 1;
                 break;
             case 0b0001:
             case 0b1101:
-                btnSendData = "W510000";
+                left = 1;
+                right = -1;
                 break;
             case 0b1010:
-                btnSendData = "W255510";
+                left = 0;
+                right = 1;
                 break;
             case 0b1001:
-                btnSendData = "W510255";
+                left = 1;
+                right = 0;
                 break;
             case 0b0110:
-                btnSendData = "W??????";
+                left = 0;
+                right = -1;
                 break;
             case 0b0101:
-                btnSendData = "W??????";
+                left = -1;
+                right = 0;
                 break;
         }
+        btnSendData = wheelCommand.getCommand(left, right);
         TextView text = (TextView) findViewById(R.id.btnStatusView);
         text.setText(btnSendData);
     }
 
 
     public void autoModeBtnOnClick(View view) {
-        btnSendData = "W510000";
+        btnSendData = wheelCommand.getCommand(1, -1);
         TextView text = (TextView) findViewById(R.id.btnStatusView);
         text.setText(btnSendData);
     }
@@ -362,24 +415,34 @@ public class MainActivity extends AppCompatActivity {
                                 orientData = event.values;
                                 break;
                         }
-                        if (accelData != null && magFieldData != null) {
+
+                        if (orientData != null) {
+                            textView.setText("");
+                            //for (float tmp : orientData) {
+                            //    textView.append(String.format("%-7.1f", tmp));
+                            //}
+                            double left = ((orientData[1] + 30) / 45) - (orientData[2] / 45);
+                            double right = ((orientData[1] + 30) / 45) + (orientData[2] / 45);
+                            sensorSendData = wheelCommand.getCommand(left, right);
+                            textView.append(sensorSendData);
+                            orientData = null;
+                        } else if (accelData != null && magFieldData != null) {
                             boolean isSensorOk = SensorManager.getRotationMatrix(matR, null, accelData, magFieldData);
                             if (isSensorOk) {
                                 textView.setText("");
                                 float[] orientation = SensorManager.getOrientation(matR, new float[3]);
-                                for (float tmp : orientation) {
-                                    textView.append(String.format("%-7.1f", tmp / Math.PI * 180));
-                                }
+                                //for (float tmp : orientation) {
+                                //    textView.append(String.format("%-7.1f", tmp / Math.PI * 180));
+                                //}
+                                double left = ((orientation[1] + Math.PI / 6) / Math.PI * 4) + (orientation[2] / Math.PI * 4);
+                                double right = ((orientation[1] + Math.PI / 6) / Math.PI * 4) - (orientation[2] / Math.PI * 4);
+                                sensorSendData = wheelCommand.getCommand(left, right);
+                                textView.append(sensorSendData);
                             }
                             accelData = null;
                             magFieldData = null;
                         }
-                        if (orientData != null) {
-                            textView.setText("");
-                            for (float tmp : orientData) {
-                                textView.append(String.format("%-7.1f", tmp));
-                            }
-                        }
+
                     }
 
                     @Override
@@ -435,6 +498,13 @@ public class MainActivity extends AppCompatActivity {
             System.out.println("藍芽是我開的 把他關起來...");
             bluetoothAdapter.disable();
         }
+
+        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar);
+        int data = seekBar.getProgress();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt("seekbar", data);
+        editor.commit();
     }
 
 }
