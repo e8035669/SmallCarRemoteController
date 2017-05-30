@@ -13,14 +13,16 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.IdRes;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -49,6 +51,10 @@ public class MainActivity extends AppCompatActivity {
 
     // Note: 小車命令計算機
     private WheelCommand wheelCommand = new WheelCommand();
+
+    //Note: Debug
+    private boolean debug = false;
+    private int debugCount = 0;
 
 
     @Override
@@ -252,6 +258,41 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
         int value = preferences.getInt("seekbar", 128);
         seekBar.setProgress(value);
+
+        // Note: Debug 模式
+        debug = preferences.getBoolean("debug", false);
+        LinearLayout debugView = (LinearLayout) findViewById(R.id.debugView);
+        Button autoModeBtn = (Button) findViewById(R.id.autoModeBtn);
+        if (debug) {
+            debugView.setVisibility(View.VISIBLE);
+            autoModeBtn.setVisibility(View.VISIBLE);
+        } else {
+            debugView.setVisibility(View.GONE);
+            autoModeBtn.setVisibility(View.GONE);
+        }
+        Button button = (Button) findViewById(R.id.bluetoothConnectBtn);
+        button.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                debugCount++;
+                if (debugCount == 10) {
+                    debugCount = 0;
+                    debug = !debug;
+                    LinearLayout debugView = (LinearLayout) findViewById(R.id.debugView);
+                    Button autoModeBtn = (Button) findViewById(R.id.autoModeBtn);
+                    if (debug) {
+                        debugView.setVisibility(View.VISIBLE);
+                        autoModeBtn.setVisibility(View.VISIBLE);
+                        Toast.makeText(MainActivity.this, "恭喜你 現在可以debug了!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        debugView.setVisibility(View.GONE);
+                        autoModeBtn.setVisibility(View.GONE);
+                    }
+                }
+                return false;
+            }
+        });
+
     }
 
     @Override
@@ -504,7 +545,9 @@ public class MainActivity extends AppCompatActivity {
         int data = seekBar.getProgress();
         SharedPreferences.Editor editor = preferences.edit();
         editor.putInt("seekbar", data);
+        editor.putBoolean("debug", debug);
         editor.commit();
     }
+
 
 }

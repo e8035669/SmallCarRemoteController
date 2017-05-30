@@ -3,19 +3,10 @@ package tw.jeff.smallcarremotecontroller;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.os.Handler;
-import android.provider.Settings;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.Socket;
-import java.nio.charset.Charset;
-import java.util.Scanner;
 import java.util.UUID;
 
 /**
@@ -30,6 +21,7 @@ public abstract class BluetoothConnectThread extends Thread {
     public static final int DISCONNECT_ON_ERROR = 4;
     public static final int MessageDelivered = 10;
     private final Object statusMutex = new Object();
+    private final UUID SSPUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private BluetoothDevice device;
     private BluetoothSocket socket = null;
     private int status = BluetoothConnectThread.NONE;
@@ -46,13 +38,14 @@ public abstract class BluetoothConnectThread extends Thread {
         this.messageHandler = messageHandler;
         setStatus(BluetoothConnectThread.CONNECTING);
         try {
-            Method method = device.getClass().getMethod("createRfcommSocket", int.class);
-            socket = (BluetoothSocket) method.invoke(device, Integer.valueOf(1));
+            //Method method = device.getClass().getMethod("createRfcommSocket", int.class);
+            //socket = (BluetoothSocket) method.invoke(device, Integer.valueOf(1));
+            socket = device.createRfcommSocketToServiceRecord(SSPUUID);
             socket.connect();
             inputStream = socket.getInputStream();
             outputWriter = new PrintWriter(socket.getOutputStream());
             setStatus(BluetoothConnectThread.CONNECTED);
-        } catch (IOException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+        } catch (IOException e) {
             setStatusErr(DISCONNECT_ON_ERROR, e);
         } catch (Exception ex) {
             setStatusErr(DISCONNECT_ON_ERROR, ex);
@@ -71,7 +64,7 @@ public abstract class BluetoothConnectThread extends Thread {
                     int length = inputStream.read(buffer);
                     messageHandler.obtainMessage(MessageDelivered, length, -1, buffer).sendToTarget();
                 }
-            } catch (IOException e)  {
+            } catch (IOException e) {
                 ex = e;
             }
 
@@ -94,10 +87,10 @@ public abstract class BluetoothConnectThread extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if(ex == null){
+        if (ex == null) {
             setStatus(BluetoothConnectThread.DISCONNECT);
-        }else {
-            setStatusErr(BluetoothConnectThread.DISCONNECT_ON_ERROR,ex);
+        } else {
+            setStatusErr(BluetoothConnectThread.DISCONNECT_ON_ERROR, ex);
         }
     }
 
@@ -127,11 +120,11 @@ public abstract class BluetoothConnectThread extends Thread {
         isNeedStop = needStop;
     }
 
-    public String getDeviceName(){
+    public String getDeviceName() {
         return device.getName();
     }
 
-    public String getDeviceAddress(){
+    public String getDeviceAddress() {
         return device.getAddress();
     }
 
