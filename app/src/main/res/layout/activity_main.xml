@@ -9,26 +9,25 @@
     tools:context="tw.jeff.smallcarremotecontroller.MainActivity">
 
     <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0"
-        tools:layout_constraintBottom_creator="1"
         tools:layout_constraintLeft_creator="1"
         tools:layout_constraintRight_creator="1"
-        tools:layout_constraintTop_creator="1">
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight=".26"
             android:orientation="horizontal"
             tools:layout_editor_absoluteX="8dp"
             tools:layout_editor_absoluteY="8dp">
@@ -42,8 +41,10 @@
             <ImageButton
                 android:id="@+id/upBtn"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:adjustViewBounds="true"
+                android:scaleType="centerCrop"
                 app:srcCompat="@drawable/arrow"
                 tools:layout_editor_absoluteX="118dp"
                 tools:layout_editor_absoluteY="16dp" />
@@ -58,7 +59,8 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight=".26"
             android:orientation="horizontal"
             tools:layout_editor_absoluteX="8dp"
             tools:layout_editor_absoluteY="8dp">
@@ -66,9 +68,11 @@
             <ImageButton
                 android:id="@+id/leftBtn"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:adjustViewBounds="true"
                 android:rotation="-90"
+                android:scaleType="centerCrop"
                 app:srcCompat="@drawable/arrow"
                 tools:layout_editor_absoluteX="6dp"
                 tools:layout_editor_absoluteY="136dp" />
@@ -82,9 +86,11 @@
             <ImageButton
                 android:id="@+id/rightBtn"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:adjustViewBounds="true"
                 android:rotation="90"
+                android:scaleType="centerCrop"
                 app:srcCompat="@drawable/arrow"
                 tools:layout_editor_absoluteX="235dp"
                 tools:layout_editor_absoluteY="136dp" />
@@ -92,7 +98,8 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight=".26"
             android:orientation="horizontal">
 
             <Space
@@ -104,9 +111,11 @@
             <ImageButton
                 android:id="@+id/downBtn"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:adjustViewBounds="true"
                 android:rotation="180"
+                android:scaleType="centerCrop"
                 app:srcCompat="@drawable/arrow"
                 tools:layout_editor_absoluteX="118dp"
                 tools:layout_editor_absoluteY="256dp" />
@@ -120,10 +129,20 @@
         </LinearLayout>
 
         <GridLayout
+            android:id="@+id/controlLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:layout_editor_absoluteX="8dp"
-            tools:layout_editor_absoluteY="8dp">
+            android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight=".22"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0">
 
             <RadioGroup
                 android:id="@+id/controlOptRadioGroup"
@@ -214,8 +233,7 @@
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        tools:layout_constraintLeft_creator="1"
-        tools:layout_constraintTop_creator="1">
+        android:layout_marginEnd="8dp">
 
         <TextView
             android:id="@+id/bluetoothStatus"
