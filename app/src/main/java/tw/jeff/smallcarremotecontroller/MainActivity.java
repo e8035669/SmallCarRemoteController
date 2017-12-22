@@ -89,8 +89,14 @@ public class MainActivity extends AppCompatActivity {
                         textView.setText("連線中....");
                         break;
                     case BluetoothConnectThread.CONNECTED:
-                        textView.setText("已連線到" + bluetoothConnectThread.getDeviceAddress());
-                        buttonView.setText("已經連線到" + bluetoothConnectThread.getDeviceName());
+                        String address = "";
+                        String name = "";
+                        if(bluetoothConnectThread != null) {
+                            address = bluetoothConnectThread.getDeviceAddress();
+                            name = bluetoothConnectThread.getDeviceName();
+                        }
+                        textView.setText("已連線到" + address);
+                        buttonView.setText("已經連線到" + name);
                         break;
                     case BluetoothConnectThread.DISCONNECT:
                         textView.setText("斷線");

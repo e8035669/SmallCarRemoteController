@@ -56,18 +56,19 @@ public abstract class BluetoothConnectThread extends Thread {
 
     @Override
     public void run() {
-        byte[] buffer = new byte[1024];
+        //byte[] buffer = new byte[1024];
         Exception ex = null;
         while (getStatus() == CONNECTED && !isNeedStop) {
+            /*
             try {
                 if (inputStream.available() > 0) {
                     int length = inputStream.read(buffer);
                     messageHandler.obtainMessage(MessageDelivered, length, -1, buffer).sendToTarget();
                 }
+                System.out.println("here~3");
             } catch (IOException e) {
                 ex = e;
-            }
-
+            }*/
             if (System.currentTimeMillis() > (timeStamp + delayTime)) {
                 timeStamp = System.currentTimeMillis();
                 try {
